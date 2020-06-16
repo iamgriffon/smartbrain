@@ -5,15 +5,12 @@ import Navigation from './Components/Navigation/Navigation';
 import Logo from './Components/Logo/Logo';
 import ImageLinkForm from './Components/ImageLinkForm/ImageLinkForm';
 import Rank from './Components/Rank/Rank';
-import Clarifai from 'clarifai';
 import FaceRecon from './Components/FaceRecon/facerecon';
 import SignIn from './Components/SignIn/SignIn';
 import Register from './Components/Register/Register';
 
 
-const app = new Clarifai.App({
-  apiKey: 'c4df1e7e7e83499594114f873b920f5e'
-});
+
 
 const particlesOptions ={
     particles: {
@@ -27,16 +24,35 @@ const particlesOptions ={
   }
 }
 
+const initialState = {
+  input: '',
+  imageUrl: '',
+  box: {},
+  route: 'notlogged',
+  logged: false,
+  user: {
+    id: '',
+    name: '',
+    email: '',
+    entries: 0,
+    joined: ''
+  }
+}
+
 class App extends Component {
   constructor() {
     super();
-    this.state = {
-      input: '',
-      imageUrl: '',
-      box: {},
-      route: 'notlogged',
-      logged: false
-    }
+    this.state = initialState;
+  }
+
+  loadUser = (data) => {
+    this.setState({user: {
+      id: data.id,
+      name: data.name,
+      email: data.email,
+      entries: data.entries,
+      joined: data.joined
+    } })
   }
 
   displayBox = (box) => {
@@ -50,14 +66,12 @@ class App extends Component {
 
   onRouteChange = (route) => {
     if (route === 'notlogged') {
-      this.setState({ logged: false })
+      this.setState(initialState)
     } else if (route ==='home') {
       this.setState({ logged: true })
     }
     this.setState({route : route});
-    console.log(route, 'logged:', this.state.logged)
   }
-
 
   calculateFace = (data) => {
      const clarifaiFace = data.outputs[0].data.regions[0].region_info.bounding_box;
@@ -72,36 +86,57 @@ class App extends Component {
      }
   }
 
- 
-  onSubmit = () => {
-    this.setState({imageUrl: this.state.input});
-    app.models.predict(
-      Clarifai.FACE_DETECT_MODEL, 
-      this.state.input)
-      .then(response => {this.displayBox(this.calculateFace(response))})
-      .catch(err => { console.log(err)})}
-
+  onSubmit = () => { //função para submeter a imagem
+    this.setState({imageUrl: this.state.input}); //armazenando o link da imagem
+      fetch('http://localhost:3000/imageurl', { //function para chamar a API e fazer o serviço
+      method: 'post',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        input: this.state.input //E no corpo da request vc vai mandar o id o user (pq a request pede)
+      })
+    })
+    .then(response => response.json())
+      .then(response => {
+        if(response) {
+          fetch('http://localhost:3000/image', { //puxar no frontend uma request de put
+            method: 'put',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({
+              id: this.state.user.id //E no corpo da request vc vai mandar o id o user (pq a request pede)
+            })
+          })
+          .then(response => response.json()) //E o servidor vai mandar a resposta
+          .then(count =>  //E daí ele vai pegar a resposta e vai
+            this.setState(Object.assign(this.state.user, { entries: count }))) //armazenar no estado
+        }
+        this.displayBox(this.calculateFace(response))})
+          .catch(err => { console.log(err)})}
 
   render(){
     let { imageUrl, box, logged, route } = this.state;
+    let {name, entries} = this.state.user;
     return (
       <div className="App">
         <Particles className='particles'
          params={particlesOptions} />
         <Navigation loggedin={logged} onRouteChange={this.onRouteChange} />
-            { route === 'home' //If para carregar a home
+            { route === 'home' //Se o estado atual for de "Home" (ou seja, logado)
              ? <div> 
              <Logo />
              <ImageLinkForm onInputChange={this.onInputChange} onSubmit={this.onSubmit} />
-             <Rank />
+             <Rank name={name} entries={entries} />
              <FaceRecon 
              box={box}
              imageUrl={imageUrl} /> 
            </div>
              :(
                this.state.route === 'notlogged'  //Else if => :(condição ? :)
-               ? <SignIn onRouteChange={this.onRouteChange}/>
-               : <Register onRouteChange={this.onRouteChange}/>
+               ? <SignIn  //Se o estado for de não logado, vai renderizar o seguinte: 
+               onRouteChange={this.onRouteChange}
+               loadUser={this.loadUser}/>
+               : <Register 
+               loadUser={this.loadUser}
+               onRouteChange={this.onRouteChange}/>
              )}
         </div>
          )
