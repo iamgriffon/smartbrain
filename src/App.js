@@ -88,7 +88,7 @@ class App extends Component {
 
   onSubmit = () => { //função para submeter a imagem
     this.setState({imageUrl: this.state.input}); //armazenando o link da imagem
-      fetch('http://localhost:3000/imageurl', { //function para chamar a API e fazer o serviço
+      fetch('http://calm-wildwood-09367.herokuapp.com/imageurl', { //function para chamar a API e fazer o serviço
       method: 'post',
       headers: {'Content-Type':'application/json'},
       body: JSON.stringify({
@@ -98,7 +98,7 @@ class App extends Component {
     .then(response => response.json())
       .then(response => {
         if(response) {
-          fetch('http://localhost:3000/image', { //puxar no frontend uma request de put
+          fetch('http://calm-wildwood-09367.herokuapp.com/image', { //puxar no frontend uma request de put
             method: 'put',
             headers: {'Content-Type':'application/json'},
             body: JSON.stringify({

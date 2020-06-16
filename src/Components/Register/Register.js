@@ -22,7 +22,7 @@ class Register extends React.Component {
     }
 
     onRegister = () => { //Essa function vai pegar os dados (baseados nos estados), dar fetch no servidor e mandar na request, os dados armazenados
-      fetch('http://localhost:3000/register', {
+      fetch('http://calm-wildwood-09367.herokuapp.com/register', {
         method: 'post',
         headers: {'Content-Type':'application/json'},
         body: JSON.stringify({
