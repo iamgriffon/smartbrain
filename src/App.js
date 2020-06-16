@@ -9,9 +9,6 @@ import FaceRecon from './Components/FaceRecon/facerecon';
 import SignIn from './Components/SignIn/SignIn';
 import Register from './Components/Register/Register';
 
-
-
-
 const particlesOptions ={
     particles: {
     number: {
@@ -88,7 +85,7 @@ class App extends Component {
 
   onSubmit = () => { //função para submeter a imagem
     this.setState({imageUrl: this.state.input}); //armazenando o link da imagem
-      fetch('http://calm-wildwood-09367.herokuapp.com/imageurl', { //function para chamar a API e fazer o serviço
+      fetch('https://calm-wildwood-09367.herokuapp.com/imageurl', { //function para chamar a API e fazer o serviço
       method: 'post',
       headers: {'Content-Type':'application/json'},
       body: JSON.stringify({
@@ -98,7 +95,7 @@ class App extends Component {
     .then(response => response.json())
       .then(response => {
         if(response) {
-          fetch('http://calm-wildwood-09367.herokuapp.com/image', { //puxar no frontend uma request de put
+          fetch('https://calm-wildwood-09367.herokuapp.com/image', { //puxar no frontend uma request de put
             method: 'put',
             headers: {'Content-Type':'application/json'},
             body: JSON.stringify({
